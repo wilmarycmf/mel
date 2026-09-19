@@ -1,0 +1,76 @@
+/* GlobalPulse — design tokens. No raw hex outside this file for colours. */
+
+:root {
+  /* Surfaces */
+  --gp-bg-0: #06121c;
+  --gp-bg-1: #0c1d2c;
+  --gp-bg-2: #142c41;
+  --gp-bg-3: #1c3b54;
+  --gp-surface: #0f2438;
+  --gp-surface-2: #15324a;
+  --gp-line: rgba(130, 200, 220, 0.18);
+  --gp-line-strong: rgba(150, 230, 200, 0.35);
+
+  /* Text */
+  --gp-text: #e8f4f0;
+  --gp-text-soft: #a9c1c8;
+  --gp-text-mute: #748893;
+  --gp-text-dim: #5b6d76;
+
+  /* Accents */
+  --gp-accent: #5fd7ae;
+  --gp-accent-strong: #7fe7c4;
+  --gp-accent-warm: #ffd479;
+  --gp-reef: #4ecdc4;
+  --gp-reef-deep: #2c8a87;
+  --gp-water: #5fb4d8;
+
+  /* Status */
+  --gp-ok: #5fd7ae;
+  --gp-warn: #ffd479;
+  --gp-danger: #ff7a85;
+  --gp-info: #8ab4ff;
+
+  /* Shadows / glows */
+  --gp-glow-accent: 0 0 14px rgba(95, 215, 174, 0.45);
+  --gp-glow-warm: 0 0 14px rgba(255, 212, 121, 0.55);
+  --gp-shadow-card: 0 8px 24px rgba(0, 0, 0, 0.32);
+
+  /* Radii / spacing */
+  --gp-radius-sm: 6px;
+  --gp-radius-md: 10px;
+  --gp-radius-lg: 16px;
+  --gp-radius-pill: 999px;
+
+  --gp-gap-1: 6px;
+  --gp-gap-2: 10px;
+  --gp-gap-3: 16px;
+  --gp-gap-4: 24px;
+  --gp-gap-5: 36px;
+
+  /* Type */
+  --gp-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
+    system-ui, sans-serif;
+  --gp-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Layout */
+  --gp-shell-max: 1240px;
+  --gp-shell-pad: clamp(12px, 3vw, 24px);
+  --gp-nav-height: 56px;
+  --gp-companion-size: 96px;
+
+  /* Motion */
+  --gp-ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --gp-ease-soft: cubic-bezier(0.45, 0, 0.2, 1);
+  --gp-duration-1: 180ms;
+  --gp-duration-2: 320ms;
+  --gp-duration-3: 600ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --gp-duration-1: 1ms;
+    --gp-duration-2: 1ms;
+    --gp-duration-3: 1ms;
+  }
+}
