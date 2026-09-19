@@ -451,6 +451,8 @@ export interface ControlledCandidate {
   sourceStatus: string;
   evidenceStatus?: string;
   reviewStatus?: string;
+  mainClaim?: string;
+  evidenceQuotes?: string[];
   sources: Array<{ publisher: string; url: string }>;
 }
 
@@ -511,6 +513,10 @@ function asControlledCandidate(value: unknown): ControlledCandidate | null {
     sourceStatus,
     evidenceStatus: pickStr(rec, 'evidenceStatus'),
     reviewStatus: pickStr(rec, 'reviewStatus'),
+    mainClaim: pickStr(rec, 'mainClaim'),
+    evidenceQuotes: Array.isArray(rec.evidenceQuotes)
+      ? rec.evidenceQuotes.filter((quote): quote is string => typeof quote === 'string')
+      : undefined,
     sources,
   };
 }

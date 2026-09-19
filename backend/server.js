@@ -62,9 +62,19 @@ function publicState() {
   const signals = base.signals.concat(pendingStore.approvedDynamicSignals);
   const subregions = uniqueSorted(signals.map((s) => s.geography && s.geography.region));
   const countries = uniqueSorted(signals.map((s) => s.geography && s.geography.country));
+  const categories = uniqueSorted([
+    ...(base.categories || []),
+    ...signals.map((s) => s.category),
+  ]);
+  const signalTypes = uniqueSorted([
+    ...(base.signalTypes || []),
+    ...signals.map((s) => s.signalType),
+  ]);
   return {
     ...base,
     signals,
+    categories,
+    signalTypes,
     subregions,
     countries,
     regions: countries,
@@ -289,13 +299,61 @@ app.get('/api/signals', (req, res) => {
   });
 });
 
+function reviewCandidate(candidate) {
+  return {
+    ...validator.flatten(candidate),
+    mainClaim: candidate.mainClaim,
+    evidenceQuotes: candidate.evidenceQuotes,
+  };
+}
+
+function sourceUrlMatches(candidate, normalizedUrl) {
+  return Array.isArray(candidate.sources) && candidate.sources.some(
+    (source) => controlledIngestion.normaliseUrl(source.url) === normalizedUrl,
+  );
+}
+
+function duplicateSource(normalizedUrl) {
+  const existing = [
+    ...seed.getState().signals,
+    ...pendingStore.pendingSignals,
+    ...pendingStore.approvedDynamicSignals,
+  ].find((candidate) => sourceUrlMatches(candidate, normalizedUrl));
+  return existing || null;
+}
+
 app.post('/api/ingest', async (req, res) => {
-  const result = await controlledIngestion.createControlledCandidate(req.body && req.body.url);
+  const policy = controlledIngestion.sourcePolicy(req.body && req.body.url);
+  if (!policy.ok) {
+    return res.status(policy.httpStatus).json({ status: policy.status, reason: policy.reason });
+  }
+
+  const requestedUrl = controlledIngestion.normaliseUrl(policy.url.toString());
+  const existing = duplicateSource(requestedUrl);
+  if (existing) {
+    return res.status(409).json({
+      status: 'REJECTED',
+      reason: 'DUPLICATE_SOURCE',
+      existingSignalId: existing.id,
+    });
+  }
+
+  const result = await controlledIngestion.createGuardedCandidate(policy.url.toString());
   if (!result.ok) {
     return res.status(result.httpStatus).json({ status: result.status, reason: result.reason });
   }
+
+  const redirectedDuplicate = duplicateSource(result.canonicalUrl);
+  if (redirectedDuplicate) {
+    return res.status(409).json({
+      status: 'REJECTED',
+      reason: 'DUPLICATE_SOURCE',
+      existingSignalId: redirectedDuplicate.id,
+    });
+  }
+
   pendingStore.addPending(result.candidate);
-  return res.status(200).json({ status: 'PENDING_REVIEW', candidate: validator.flatten(result.candidate) });
+  return res.status(200).json({ status: 'PENDING_REVIEW', candidate: reviewCandidate(result.candidate) });
 });
 
 app.post('/api/signals/:id/approve', (req, res) => {

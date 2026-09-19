@@ -7,7 +7,6 @@ import {
 } from '../../services/api';
 import { Button } from '../ui-mini';
 
-const CONTROLLED_URL = 'https://science.nasa.gov/citizen-science/galaxy-zoo-clump-scout-ii/';
 
 type ReviewState =
   | { kind: 'IDLE' }
@@ -18,7 +17,7 @@ type ReviewState =
   | { kind: 'PUBLISHED'; candidate: ControlledCandidate };
 
 export function ControlledIngestion(): JSX.Element {
-  const [url, setUrl] = useState(CONTROLLED_URL);
+  const [url, setUrl] = useState('');
   const [state, setState] = useState<ReviewState>({ kind: 'IDLE' });
 
   async function processSource() {
@@ -52,9 +51,8 @@ export function ControlledIngestion(): JSX.Element {
   const candidate = state.kind === 'PENDING_REVIEW' || state.kind === 'PUBLISHED' ? state.candidate : null;
 
   return (
-    <section aria-label="Controlled ingestion test">
-      <h2>Controlled ingestion test</h2>
-      <p>Supported test source: NASA Clump Scout II</p>
+    <section aria-label="Source Review">
+      <h2>Source Review</h2>
       <label>
         SOURCE URL
         <input
@@ -79,13 +77,19 @@ export function ControlledIngestion(): JSX.Element {
           <p>{candidate.summary}</p>
           <p>Category: {candidate.category}</p>
           <p>Type: {candidate.type}</p>
-          <p>Country: {candidate.country}</p>
-          <p>Region: {candidate.region}</p>
+          <p>Geography: {candidate.country} · {candidate.region}</p>
+          {candidate.mainClaim ? <p>Main Claim: {candidate.mainClaim}</p> : null}
           {candidate.sources.map((source) => (
             <p key={source.url}>
               {source.publisher}: <a href={source.url} target="_blank" rel="noopener noreferrer">{source.url}</a>
             </p>
           ))}
+          {candidate.evidenceQuotes?.length ? (
+            <div>
+              <p>Evidence</p>
+              {candidate.evidenceQuotes.map((quote) => <p key={quote}>{quote}</p>)}
+            </div>
+          ) : null}
           {state.kind === 'PENDING_REVIEW' ? (
             <>
               <Button onClick={() => void approve()}>APPROVE</Button>

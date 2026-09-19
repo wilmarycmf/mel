@@ -36,7 +36,6 @@ const REQUIRED_STRING_FIELDS = [
   'shortDescription',
   'category',
   'signalType',
-  'timestamp',
 ];
 
 const SUMMARY_BUCKETS = ['PROGRESS', 'BREAKTHROUGH', 'NEEDS_ATTENTION', 'RECOVERY'];
@@ -182,16 +181,22 @@ function validateSignal(signal, ctx) {
     }
   }
 
-  // timestamp must be parseable by Date
-  if (isNonEmptyString(signal.timestamp)) {
-    const t = Date.parse(signal.timestamp);
-    if (Number.isNaN(t)) {
-      errors.push({
-        field: 'timestamp',
-        code: 'INVALID_DATE',
-        message: `Field "timestamp" must be a valid date string (got "${signal.timestamp}").`,
-      });
-    }
+  // TEST data retains the original required timestamp contract. Agentic
+  // DEVELOPING/VERIFIED candidates may omit it when the source supplies no
+  // publish/modified date; a date is never invented from ingest time.
+  if (signal.sourceStatus === 'TEST' && !isNonEmptyString(signal.timestamp)) {
+    errors.push({
+      field: 'timestamp',
+      code: 'REQUIRED_STRING',
+      message: 'Field "timestamp" must be a non-empty string for TEST signals.',
+    });
+  }
+  if (isNonEmptyString(signal.timestamp) && Number.isNaN(Date.parse(signal.timestamp))) {
+    errors.push({
+      field: 'timestamp',
+      code: 'INVALID_DATE',
+      message: `Field "timestamp" must be a valid date string (got "${signal.timestamp}").`,
+    });
   }
 
   // importance must be integer 1..5
