@@ -43,6 +43,7 @@ function makePinElement(signal: Signal, selected: boolean, onSelect: (id: string
   el.title = signal.title;
   el.style.cssText = `
     width:${size}px;height:${size}px;cursor:pointer;transform:translate(-50%,-100%);
+    pointer-events:auto;
     filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))${selected ? ' drop-shadow(0 0 6px #fff)' : ''};
   `;
   el.innerHTML = `
