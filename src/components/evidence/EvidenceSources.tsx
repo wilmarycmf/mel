@@ -1,48 +1,30 @@
-/**
- * GlobalPulse — evidence source cards.
- *
- * Renders each source attached to a VERIFIED/DEVELOPING signal as a small
- * interactive card: PRIMARY SOURCE or SUPPORTING SOURCE, publisher, title,
- * and an "OPEN SOURCE ↗" link that opens in a new tab. No embedding, no
- * scraping — just a plain outbound link.
- */
-
 import type { EvidenceSource } from '../../types';
 
-export interface EvidenceSourcesProps {
-  sources: EvidenceSource[];
-}
+export interface EvidenceSourcesProps { sources: EvidenceSource[]; }
 
 export function EvidenceSources({ sources }: EvidenceSourcesProps): JSX.Element | null {
-  if (!sources || sources.length === 0) return null;
-
+  if (!sources?.length) return null;
   return (
-    <section className="gp-evidence" aria-label="Evidence sources">
-      <h3 className="gp-evidence__heading">Evidence</h3>
+    <section className="gp-evidence" aria-label="Verified evidence">
+      <div className="gp-evidence__header">
+        <p className="gp-section-kicker">VERIFIED EVIDENCE</p>
+        <span>Original sources</span>
+      </div>
       <div className="gp-evidence__list">
-        {sources.map((source, i) => (
-          <div className="gp-evidence__card" key={`${source.url}-${i}`}>
-            <span
-              className={
-                source.primary
-                  ? 'gp-evidence__badge gp-evidence__badge--primary'
-                  : 'gp-evidence__badge gp-evidence__badge--supporting'
-              }
-            >
-              {source.primary ? 'PRIMARY SOURCE' : 'SUPPORTING SOURCE'}
-            </span>
-            <div className="gp-evidence__publisher">{source.publisher}</div>
-            <div className="gp-evidence__title">{source.title}</div>
-            <a
-              className="gp-evidence__link"
-              href={source.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Open source: ${source.title} (opens in a new tab)`}
-            >
-              OPEN SOURCE ↗
-            </a>
-          </div>
+        {sources.map((source, index) => (
+          <article className="gp-evidence__card" key={`${source.url}-${index}`}>
+            <div className="gp-evidence__topline">
+              <span className={source.primary ? 'gp-evidence__badge gp-evidence__badge--primary' : 'gp-evidence__badge'}>
+                {source.primary ? 'PRIMARY SOURCE' : 'SUPPORTING SOURCE'}
+              </span>
+              <span className="gp-evidence__publisher">{source.publisher}</span>
+            </div>
+            <p className="gp-evidence__title">{source.title}</p>
+            <div className="gp-evidence__footer">
+              <span>{source.type}</span>
+              <a href={source.url} target="_blank" rel="noopener noreferrer" aria-label={`Open source: ${source.title} (opens in a new tab)`}>OPEN SOURCE ↗</a>
+            </div>
+          </article>
         ))}
       </div>
     </section>

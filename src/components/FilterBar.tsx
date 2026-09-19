@@ -43,7 +43,7 @@ export function FilterBar({ filter, categories, types, onChange, counts }: Filte
       <div className="gp-filterbar__group" role="group" aria-label="Signal type">
         {visibleFilters.map((t) => {
           const active = filter.type === t;
-          const label = t === 'WORLD' ? 'World' : TYPE_LABEL[t as SignalType];
+          const label = t === 'WORLD' ? 'All' : TYPE_LABEL[t as SignalType];
           const count = counts?.[t];
           return (
             <button
@@ -84,7 +84,7 @@ export function FilterBar({ filter, categories, types, onChange, counts }: Filte
       </div>
 
       <p className="gp-filterbar__notice" role="note">
-        Filters apply to the same globe — they do not open a different view.
+        Filter the signals on the world.
       </p>
     </section>
   );

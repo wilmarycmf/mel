@@ -1,11 +1,4 @@
-/**
- * GlobalPulse — root app.
- *
- * One primary Living World interface. No router, no dashboard pages.
- * Layout: a single full-screen surface that holds the globe, the filter
- * bar that operates on the SAME globe, and the detail panel that opens
- * when a marker is selected.
- */
+/** GlobalPulse — world-first application shell. */
 
 import { useCallback, useEffect, useState } from 'react';
 import { useWorldStore } from './state/WorldStore';
@@ -37,24 +30,18 @@ export default function App(): JSX.Element {
     counts,
   } = useWorldStore();
 
-  const selected = selectedId ? signals.find((s) => s.id === selectedId) ?? null : null;
-
-  // Companion state machine: idle by default, curious when viewing a
-  // signal, celebrating for ~2s right after a mission completes.
+  const selected = selectedId ? signals.find((signal) => signal.id === selectedId) ?? null : null;
   const [companionState, setCompanionState] = useState<CompanionState>('idle');
-  // Bumped after every mission completion so ContributionStars/the counter
-  // re-read localStorage and repaint.
   const [progressVersion, setProgressVersion] = useState(0);
   const [contributionCount, setContributionCount] = useState<number>(() => getProgress().contributionCount);
 
   useEffect(() => {
-    if (companionState === 'celebrating') return;
-    setCompanionState(selected ? 'curious' : 'idle');
+    if (companionState !== 'celebrating') setCompanionState(selected ? 'curious' : 'idle');
   }, [selected, companionState]);
 
   const handleMissionCompleted = useCallback(() => {
     setCompanionState('celebrating');
-    setProgressVersion((v) => v + 1);
+    setProgressVersion((version) => version + 1);
     setContributionCount(getProgress().contributionCount);
   }, []);
 
@@ -65,21 +52,16 @@ export default function App(): JSX.Element {
   return (
     <div className="gp-app">
       <header className="gp-app__header">
-        <div className="gp-app__brand">
+        <div className="gp-app__identity">
           <span className="gp-app__mark" aria-hidden="true" />
           <div>
-            <h1>GlobalPulse — Living World</h1>
-            <p className="gp-app__sub">
-              <span className="gp-app__badge">TEST DATA</span>
-              Interactive 2.5D globe. All signals come from the API; no claims are made.
-            </p>
+            <p className="gp-app__eyebrow">GLOBALPULSE</p>
+            <h1>Don’t just watch the world change.<br />Take part in it.</h1>
           </div>
         </div>
-        <div className="gp-app__counts" role="status" aria-live="polite">
-          <span>{counts.total} signals</span>
-          {payload?.categories?.length ? (
-            <span>· {payload.categories.length} categories</span>
-          ) : null}
+        <div className="gp-app__status" role="status" aria-live="polite">
+          <span className="gp-app__status-dot" aria-hidden="true" />
+          <span>{counts.total} verified signal{counts.total === 1 ? '' : 's'}</span>
         </div>
       </header>
 
@@ -88,21 +70,21 @@ export default function App(): JSX.Element {
         categories={payload?.categories ?? []}
         types={payload?.types ?? []}
         onChange={setFilter}
-        counts={{
-          WORLD: counts.total,
-          ...counts.byType,
-        }}
+        counts={{ WORLD: counts.total, ...counts.byType }}
       />
 
       <main className="gp-app__main">
         <section className="gp-app__globe" aria-busy={status === 'loading'}>
+          <div className="gp-world-stage__label">
+            <span>LIVE WORLD VIEW</span>
+            <span>{selected ? 'Signal selected' : 'Explore the signals'}</span>
+          </div>
           {status === 'loading' && !payload ? (
             <div className="gp-state gp-state--loading" role="status">
               <div className="gp-spinner" aria-hidden="true" />
               <p>Loading the living world…</p>
             </div>
           ) : null}
-
           {status === 'error' ? (
             <div className="gp-state gp-state--error" role="alert">
               <p className="gp-state__title">Could not load the world</p>
@@ -110,17 +92,13 @@ export default function App(): JSX.Element {
               <Button onClick={() => void refresh()}>Retry</Button>
             </div>
           ) : null}
-
           {status === 'ready' && signals.length === 0 ? (
             <div className="gp-state gp-state--empty" role="status">
               <p className="gp-state__title">No signals to show</p>
-              <p className="gp-state__detail">
-                The API returned an empty world. Try clearing filters or refreshing.
-              </p>
+              <p className="gp-state__detail">Try clearing filters or refreshing.</p>
               <Button onClick={() => void refresh()}>Refresh</Button>
             </div>
           ) : null}
-
           {status === 'ready' && signals.length > 0 ? (
             <Globe
               signals={signals}
@@ -132,55 +110,44 @@ export default function App(): JSX.Element {
           ) : null}
         </section>
 
-        <DetailPanel
-          signal={selected}
-          onClose={() => select(null)}
-          onMissionCompleted={handleMissionCompleted}
-        />
+        <DetailPanel signal={selected} onClose={() => select(null)} onMissionCompleted={handleMissionCompleted} />
       </main>
 
-      <ControlledIngestion />
-
-      <section className="gp-app__world-change">
-        <div className="gp-companion-dock">
-          <Companion state={companionState} onCelebrationEnd={handleCelebrationEnd} />
+      <section className="gp-app__world-change" aria-label="Your contribution state">
+        <div className="gp-contribution-intro">
+          <div className="gp-companion-dock">
+            <Companion state={companionState} onCelebrationEnd={handleCelebrationEnd} />
+            <div>
+              <p className="gp-section-kicker">YOUR CONTRIBUTION</p>
+              <p className="gp-contribution-intro__copy">Small actions can become a visible record of participation.</p>
+            </div>
+          </div>
           <div className="gp-progress-counter">
             <div className="gp-progress-counter__row">
               <span className="gp-progress-counter__label">YOUR CONTRIBUTIONS</span>
               <span className="gp-progress-counter__value">{contributionCount}</span>
             </div>
             <div className="gp-progress-counter__row">
-              <span className="gp-progress-counter__label">GLOBALPULSE PROTOTYPE GOAL</span>
-              <span className="gp-progress-counter__goal">
-                {contributionCount} / {CONTRIBUTION_GOAL}
-              </span>
+              <span className="gp-progress-counter__label">PROTOTYPE GOAL</span>
+              <span className="gp-progress-counter__goal">{contributionCount} / {CONTRIBUTION_GOAL}</span>
             </div>
-            <p className="gp-progress-counter__caption">
-              Prototype contributions on this device — not a real global community count.
-            </p>
+            <p className="gp-progress-counter__caption">Prototype contributions on this device</p>
           </div>
         </div>
         <ContributionStars version={progressVersion} />
       </section>
+
+      <details className="gp-source-review">
+        <summary>Source Review <span>Internal workflow</span></summary>
+        <ControlledIngestion />
+      </details>
 
       <ConsumeHook onRun={consumeRotateToSignalId} trigger={rotateToSignalId} />
     </div>
   );
 }
 
-/**
- * Tiny helper that runs the consumer once the rotate-target has been picked
- * up by the globe. We can't put `consumeRotateToSignalId` inside `Globe`
- * (it's a controlled component), so we wire it back here: after the globe
- * has mounted with a non-null target, clear it on the next tick.
- */
-function ConsumeHook({
-  trigger,
-  onRun,
-}: {
-  trigger: string | null;
-  onRun: () => void;
-}) {
+function ConsumeHook({ trigger, onRun }: { trigger: string | null; onRun: () => void }) {
   useEffect(() => {
     if (!trigger) return;
     const id = window.setTimeout(onRun, 0);
