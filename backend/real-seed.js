@@ -66,6 +66,7 @@ const REAL_SIGNALS = [
     sourceStatus: 'VERIFIED',
     sources: [
       {
+        id: 'src-nasa-galaxy-zoo',
         title: 'Galaxy Zoo — NASA Science',
         publisher: 'NASA Science',
         url: 'https://science.nasa.gov/citizen-science/galaxy-zoo/',
@@ -74,6 +75,7 @@ const REAL_SIGNALS = [
         primary: true,
       },
       {
+        id: 'src-zooniverse-galaxy-zoo',
         title: 'Galaxy Zoo — Zooniverse project platform',
         publisher: 'Zooniverse',
         url: 'https://www.zooniverse.org/projects/zookeeper/Galaxy-Zoo',
@@ -138,6 +140,7 @@ const REAL_SIGNALS = [
     sourceStatus: 'VERIFIED',
     sources: [
       {
+        id: 'src-who-measles-factsheet',
         title: 'Measles — WHO Fact Sheet',
         publisher: 'World Health Organization',
         url: 'https://www.who.int/news-room/fact-sheets/detail/measles',
@@ -146,6 +149,7 @@ const REAL_SIGNALS = [
         primary: true,
       },
       {
+        id: 'src-who-wer-index',
         title: 'Weekly Epidemiological Record (WER) — journal index',
         publisher: 'World Health Organization',
         url: 'https://www.who.int/publications/journals/weekly-epidemiological-record',
@@ -176,6 +180,7 @@ const REAL_SIGNALS = [
     sourceStatus: 'VERIFIED',
     sources: [
       {
+        id: 'src-nasa-clump-scout',
         title: 'Galaxy Zoo: Clump Scout II — NASA Science',
         publisher: 'NASA Science',
         url: 'https://science.nasa.gov/citizen-science/galaxy-zoo-clump-scout-ii/',

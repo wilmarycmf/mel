@@ -389,6 +389,7 @@ function flatten(signal) {
   // Optional evidence fields, surfaced only when present.
   if (Array.isArray(signal.sources) && signal.sources.length > 0) {
     out.sources = signal.sources.map((s) => ({
+      id: s.id,
       title: s.title,
       publisher: s.publisher,
       url: s.url,
@@ -399,6 +400,17 @@ function flatten(signal) {
   }
   if (signal.realityCheck && typeof signal.realityCheck === 'object') {
     out.realityCheck = {
+      question: signal.realityCheck.question,
+      options: Array.isArray(signal.realityCheck.options)
+        ? signal.realityCheck.options.map((o) => ({
+            id: o.id,
+            label: o.label,
+          }))
+        : undefined,
+      correctAnswer: signal.realityCheck.correctAnswer,
+      explanation: signal.realityCheck.explanation,
+      sourceId: signal.realityCheck.sourceId,
+      // legacy fields kept for the backend validator's generic shape
       claim: signal.realityCheck.claim,
       supported: signal.realityCheck.supported,
       notSupported: signal.realityCheck.notSupported,

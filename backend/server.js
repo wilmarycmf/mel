@@ -38,7 +38,16 @@ const seed = require('./seed');
 const validator = require('./validator');
 
 const PORT = process.env.PORT || 3000;
-const DATA_MODE = 'TEST';
+
+/**
+ * Truthful data-mode label derived from the ACTIVE dataset: "VERIFIED"
+ * when the public, real-only dataset is served, "TEST" when synthetic
+ * TEST signals are present (INCLUDE_TEST_DATA=true or a test fixture).
+ */
+function dataMode(state) {
+  const hasTest = (state.signals || []).some((s) => s && s.sourceStatus === 'TEST');
+  return hasTest ? 'TEST' : 'VERIFIED';
+}
 
 /* ----------------------------------------------- startup validation */
 
@@ -132,7 +141,7 @@ function applyFilters(signals, filters, state) {
 /* ----------------------------------------------- endpoints */
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', dataMode: DATA_MODE });
+  res.json({ status: 'ok', dataMode: dataMode(seed.getState()) });
 });
 
 app.get('/api/world', (_req, res) => {
@@ -145,7 +154,7 @@ app.get('/api/world', (_req, res) => {
   // Top-level payload shape: {summary, categories, signalTypes, signals}
   // plus optional dataMode + validation metadata.
   res.json({
-    dataMode: DATA_MODE,
+    dataMode: dataMode(state),
     summary,
     categories: state.categories.slice().sort(),
     signalTypes: state.signalTypes.slice().sort(),
@@ -249,7 +258,7 @@ app.get('/api/signals', (req, res) => {
 
   const filtered = applyFilters(validSignals, filters, state);
   res.json({
-    dataMode: DATA_MODE,
+    dataMode: dataMode(state),
     total: filtered.length,
     signals: filtered.map(validator.flatten),
     filters,
@@ -263,7 +272,7 @@ app.get('/api/signals/:id', (req, res) => {
   if (!sig) {
     return res
       .status(404)
-      .json({ error: 'NOT_FOUND', id: req.params.id, dataMode: DATA_MODE });
+      .json({ error: 'NOT_FOUND', id: req.params.id, dataMode: dataMode(state) });
   }
   const v = validator.validateSignal(sig, {
     categories: state.categories,
@@ -273,23 +282,23 @@ app.get('/api/signals/:id', (req, res) => {
     return res.status(500).json({
       error: 'INVALID_SIGNAL',
       id: req.params.id,
-      dataMode: DATA_MODE,
+      dataMode: dataMode(state),
       validation: v,
     });
   }
-  res.json({ dataMode: DATA_MODE, signal: validator.flatten(sig) });
+  res.json({ dataMode: dataMode(state), signal: validator.flatten(sig) });
 });
 
 /* ----------------------------------------------- 404 + error */
 
 app.use((_req, res) => {
-  res.status(404).json({ error: 'NOT_FOUND', dataMode: DATA_MODE });
+  res.status(404).json({ error: 'NOT_FOUND', dataMode: dataMode(seed.getState()) });
 });
 
 app.use((err, _req, res, _next) => {
   console.error('[error]', err);
   if (res.headersSent) return;
-  res.status(500).json({ error: 'INTERNAL', dataMode: DATA_MODE });
+  res.status(500).json({ error: 'INTERNAL', dataMode: dataMode(seed.getState()) });
 });
 
 /* ----------------------------------------------- export + boot */
@@ -304,4 +313,4 @@ if (require.main === module) {
   start();
 }
 
-module.exports = { app, start, DATA_MODE };
+module.exports = { app, start, dataMode };
