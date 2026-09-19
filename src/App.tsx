@@ -6,7 +6,6 @@ import { Globe } from './components/Globe3D';
 import { FilterBar } from './components/FilterBar';
 import { DetailPanel } from './components/DetailPanel';
 import { Button } from './components/ui-mini';
-import { ControlledIngestion } from './components/admin/ControlledIngestion';
 
 export default function App(): JSX.Element {
   const {
@@ -89,11 +88,6 @@ export default function App(): JSX.Element {
 
         <DetailPanel signal={selected} onClose={() => select(null)} />
       </main>
-
-      <details className="gp-source-review">
-        <summary>Source Review <span>Internal workflow</span></summary>
-        <ControlledIngestion />
-      </details>
 
       <ConsumeHook onRun={consumeRotateToSignalId} trigger={rotateToSignalId} />
     </div>
