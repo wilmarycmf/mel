@@ -16,6 +16,7 @@ import { Button } from './components/ui-mini';
 import { Companion } from './components/companion/Companion';
 import type { CompanionState } from './components/companion/Companion';
 import { ContributionStars } from './components/world/ContributionStars';
+import { ControlledIngestion } from './components/admin/ControlledIngestion';
 import { getProgress } from './services/storage';
 
 const CONTRIBUTION_GOAL = 10;
@@ -137,6 +138,8 @@ export default function App(): JSX.Element {
           onMissionCompleted={handleMissionCompleted}
         />
       </main>
+
+      <ControlledIngestion />
 
       <section className="gp-app__world-change">
         <div className="gp-companion-dock">

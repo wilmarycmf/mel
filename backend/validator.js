@@ -417,6 +417,8 @@ function flatten(signal) {
       confidence: signal.realityCheck.confidence,
     };
   }
+  if (signal.evidenceStatus) out.evidenceStatus = signal.evidenceStatus;
+  if (signal.reviewStatus) out.reviewStatus = signal.reviewStatus;
   if (Array.isArray(signal.missions) && signal.missions.length > 0) {
     out.missions = signal.missions.map((m) => ({
       id: m.id,

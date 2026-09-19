@@ -440,3 +440,102 @@ export const API_BASE_URL = BASE_URL;
 
 /* Exported for tests / diagnostics. */
 export const __testing = { joinUrl, resolveBaseUrl };
+export interface ControlledCandidate {
+  id: string;
+  title: string;
+  summary: string;
+  category: string;
+  type: string;
+  country: string;
+  region: string;
+  sourceStatus: string;
+  evidenceStatus?: string;
+  reviewStatus?: string;
+  sources: Array<{ publisher: string; url: string }>;
+}
+
+export type ControlledIngestionResult =
+  | { status: 'PENDING_REVIEW'; candidate: ControlledCandidate }
+  | { status: 'NOT_READY' | 'REJECTED'; reason: string };
+
+async function mutation(path: string, body?: unknown): Promise<unknown> {
+  const url = joinUrl(BASE_URL, path);
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const text = await res.text();
+  let parsed: unknown = null;
+  if (text) {
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = null;
+    }
+  }
+  if (!res.ok && (!parsed || typeof parsed !== 'object')) {
+    throw new ApiError(path, res.status, `${res.status} ${res.statusText}`);
+  }
+  return parsed;
+}
+
+function asControlledCandidate(value: unknown): ControlledCandidate | null {
+  const rec = asRecord(value);
+  const id = pickStr(rec, 'id');
+  const title = pickStr(rec, 'title');
+  const summary = pickStr(rec, 'summary');
+  const category = pickStr(rec, 'category');
+  const type = pickStr(rec, 'type');
+  const country = pickStr(rec, 'country');
+  const region = pickStr(rec, 'region');
+  const sourceStatus = pickStr(rec, 'sourceStatus');
+  if (!id || !title || !summary || !category || !type || !country || !region || !sourceStatus) return null;
+  const sourceRows = Array.isArray(rec.sources) ? rec.sources : [];
+  const sources = sourceRows
+    .map((value) => {
+      const source = asRecord(value);
+      const publisher = pickStr(source, 'publisher');
+      const url = pickStr(source, 'url');
+      return publisher && url ? { publisher, url } : null;
+    })
+    .filter((source): source is { publisher: string; url: string } => source !== null);
+  return {
+    id,
+    title,
+    summary,
+    category,
+    type,
+    country,
+    region,
+    sourceStatus,
+    evidenceStatus: pickStr(rec, 'evidenceStatus'),
+    reviewStatus: pickStr(rec, 'reviewStatus'),
+    sources,
+  };
+}
+
+export async function processControlledSource(url: string): Promise<ControlledIngestionResult> {
+  const body = asRecord(await mutation('/ingest', { url }));
+  const status = pickStr(body, 'status');
+  if (status === 'PENDING_REVIEW') {
+    const candidate = asControlledCandidate(body.candidate);
+    if (!candidate) throw new ApiError('/ingest', 200, 'Malformed pending candidate');
+    return { status, candidate };
+  }
+  if (status === 'NOT_READY' || status === 'REJECTED') {
+    return { status, reason: pickStr(body, 'reason') ?? 'UNKNOWN' };
+  }
+  throw new ApiError('/ingest', 200, 'Unexpected ingestion response');
+}
+
+export async function approveControlledCandidate(id: string): Promise<ControlledCandidate> {
+  const body = asRecord(await mutation(`/signals/${encodeURIComponent(id)}/approve`));
+  const candidate = asControlledCandidate(body.signal);
+  if (!candidate) throw new ApiError('/approve', 200, 'Malformed approved candidate');
+  return candidate;
+}
+
+export async function rejectControlledCandidate(id: string): Promise<void> {
+  await mutation(`/signals/${encodeURIComponent(id)}/reject`);
+}

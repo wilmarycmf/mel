@@ -36,6 +36,8 @@ const cors = require('cors');
 
 const seed = require('./seed');
 const validator = require('./validator');
+const pendingStore = require('./pending-signals');
+const controlledIngestion = require('./controlled-ingestion');
 
 const PORT = process.env.PORT || 3000;
 
@@ -47,6 +49,27 @@ const PORT = process.env.PORT || 3000;
 function dataMode(state) {
   const hasTest = (state.signals || []).some((s) => s && s.sourceStatus === 'TEST');
   return hasTest ? 'TEST' : 'VERIFIED';
+}
+
+
+function uniqueSorted(items) {
+  return Array.from(new Set(items.filter(Boolean))).sort();
+}
+
+/** Public data is the existing active seed dataset plus only approved dynamic items. */
+function publicState() {
+  const base = seed.getState();
+  const signals = base.signals.concat(pendingStore.approvedDynamicSignals);
+  const subregions = uniqueSorted(signals.map((s) => s.geography && s.geography.region));
+  const countries = uniqueSorted(signals.map((s) => s.geography && s.geography.country));
+  return {
+    ...base,
+    signals,
+    subregions,
+    countries,
+    regions: countries,
+    getSignalById: (id) => signals.find((signal) => signal.id === id) || null,
+  };
 }
 
 /* ----------------------------------------------- startup validation */
@@ -141,11 +164,11 @@ function applyFilters(signals, filters, state) {
 /* ----------------------------------------------- endpoints */
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', dataMode: dataMode(seed.getState()) });
+  res.json({ status: 'ok', dataMode: dataMode(publicState()) });
 });
 
 app.get('/api/world', (_req, res) => {
-  const state = seed.getState();
+  const state = publicState();
   const v = validator.validateDataset(state.signals, {
     categories: state.categories,
     signalTypes: state.signalTypes,
@@ -170,7 +193,7 @@ app.get('/api/world', (_req, res) => {
 });
 
 app.get('/api/signals', (req, res) => {
-  const state = seed.getState();
+  const state = publicState();
 
   // 1. Reject multi-value params before doing any work.
   const checks = ['category', 'type', 'region', 'country'].map((name) => {
@@ -266,8 +289,29 @@ app.get('/api/signals', (req, res) => {
   });
 });
 
+app.post('/api/ingest', async (req, res) => {
+  const result = await controlledIngestion.createControlledCandidate(req.body && req.body.url);
+  if (!result.ok) {
+    return res.status(result.httpStatus).json({ status: result.status, reason: result.reason });
+  }
+  pendingStore.addPending(result.candidate);
+  return res.status(200).json({ status: 'PENDING_REVIEW', candidate: validator.flatten(result.candidate) });
+});
+
+app.post('/api/signals/:id/approve', (req, res) => {
+  const approved = pendingStore.approve(req.params.id);
+  if (!approved) return res.status(404).json({ error: 'NOT_FOUND', id: req.params.id });
+  return res.status(200).json({ status: 'APPROVED', signal: validator.flatten(approved) });
+});
+
+app.post('/api/signals/:id/reject', (req, res) => {
+  const rejected = pendingStore.reject(req.params.id);
+  if (!rejected) return res.status(404).json({ error: 'NOT_FOUND', id: req.params.id });
+  return res.status(200).json({ status: 'REJECTED', id: req.params.id });
+});
+
 app.get('/api/signals/:id', (req, res) => {
-  const state = seed.getState();
+  const state = publicState();
   const sig = state.getSignalById(req.params.id);
   if (!sig) {
     return res
@@ -292,13 +336,13 @@ app.get('/api/signals/:id', (req, res) => {
 /* ----------------------------------------------- 404 + error */
 
 app.use((_req, res) => {
-  res.status(404).json({ error: 'NOT_FOUND', dataMode: dataMode(seed.getState()) });
+  res.status(404).json({ error: 'NOT_FOUND', dataMode: dataMode(publicState()) });
 });
 
 app.use((err, _req, res, _next) => {
   console.error('[error]', err);
   if (res.headersSent) return;
-  res.status(500).json({ error: 'INTERNAL', dataMode: dataMode(seed.getState()) });
+  res.status(500).json({ error: 'INTERNAL', dataMode: dataMode(publicState()) });
 });
 
 /* ----------------------------------------------- export + boot */
