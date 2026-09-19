@@ -1,18 +1,12 @@
 /** GlobalPulse — world-first application shell. */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useWorldStore } from './state/WorldStore';
-import { Globe } from './components/Globe';
+import { Globe } from './components/Globe3D';
 import { FilterBar } from './components/FilterBar';
 import { DetailPanel } from './components/DetailPanel';
 import { Button } from './components/ui-mini';
-import { Companion } from './components/companion/Companion';
-import type { CompanionState } from './components/companion/Companion';
-import { ContributionStars } from './components/world/ContributionStars';
 import { ControlledIngestion } from './components/admin/ControlledIngestion';
-import { getProgress } from './services/storage';
-
-const CONTRIBUTION_GOAL = 10;
 
 export default function App(): JSX.Element {
   const {
@@ -31,23 +25,6 @@ export default function App(): JSX.Element {
   } = useWorldStore();
 
   const selected = selectedId ? signals.find((signal) => signal.id === selectedId) ?? null : null;
-  const [companionState, setCompanionState] = useState<CompanionState>('idle');
-  const [progressVersion, setProgressVersion] = useState(0);
-  const [contributionCount, setContributionCount] = useState<number>(() => getProgress().contributionCount);
-
-  useEffect(() => {
-    if (companionState !== 'celebrating') setCompanionState(selected ? 'curious' : 'idle');
-  }, [selected, companionState]);
-
-  const handleMissionCompleted = useCallback(() => {
-    setCompanionState('celebrating');
-    setProgressVersion((version) => version + 1);
-    setContributionCount(getProgress().contributionCount);
-  }, []);
-
-  const handleCelebrationEnd = useCallback(() => {
-    setCompanionState(selected ? 'curious' : 'idle');
-  }, [selected]);
 
   return (
     <div className="gp-app">
@@ -110,32 +87,8 @@ export default function App(): JSX.Element {
           ) : null}
         </section>
 
-        <DetailPanel signal={selected} onClose={() => select(null)} onMissionCompleted={handleMissionCompleted} />
+        <DetailPanel signal={selected} onClose={() => select(null)} />
       </main>
-
-      <section className="gp-app__world-change" aria-label="Your contribution state">
-        <div className="gp-contribution-intro">
-          <div className="gp-companion-dock">
-            <Companion state={companionState} onCelebrationEnd={handleCelebrationEnd} />
-            <div>
-              <p className="gp-section-kicker">YOUR CONTRIBUTION</p>
-              <p className="gp-contribution-intro__copy">Small actions can become a visible record of participation.</p>
-            </div>
-          </div>
-          <div className="gp-progress-counter">
-            <div className="gp-progress-counter__row">
-              <span className="gp-progress-counter__label">YOUR CONTRIBUTIONS</span>
-              <span className="gp-progress-counter__value">{contributionCount}</span>
-            </div>
-            <div className="gp-progress-counter__row">
-              <span className="gp-progress-counter__label">PROTOTYPE GOAL</span>
-              <span className="gp-progress-counter__goal">{contributionCount} / {CONTRIBUTION_GOAL}</span>
-            </div>
-            <p className="gp-progress-counter__caption">Prototype contributions on this device</p>
-          </div>
-        </div>
-        <ContributionStars version={progressVersion} />
-      </section>
 
       <details className="gp-source-review">
         <summary>Source Review <span>Internal workflow</span></summary>
