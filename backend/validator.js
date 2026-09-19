@@ -58,7 +58,7 @@ const ALLOWED_SOURCE_STATUSES = ['TEST', 'VERIFIED', 'DEVELOPING'];
  */
 const ALLOWED_VERIFICATION_TYPES = ['SELF_REPORTED', 'EXTERNAL'];
 
-const REQUIRED_SOURCE_FIELDS = ['title', 'publisher', 'url', 'type', 'date'];
+const REQUIRED_SOURCE_FIELDS = ['title', 'publisher', 'url', 'type'];
 
 function isNonEmptyString(v) {
   return typeof v === 'string' && v.trim().length > 0;
@@ -132,7 +132,7 @@ function validateSignal(signal, ctx) {
           code: 'SOURCES_REQUIRED',
           message:
             'A ' + status + ' signal must include at least one entry in sources[] ' +
-            'with title, publisher, url, type, date.',
+            'with title, publisher, url, and type.',
         });
       } else {
         let primaryCount = 0;
