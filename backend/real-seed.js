@@ -59,7 +59,12 @@ const REAL_SIGNALS = [
       'NASA’s Galaxy Zoo asks participants to answer questions about galaxy images from the James Webb Space Telescope. NASA says anyone with a smartphone or laptop can participate and lists no prior knowledge as a requirement.',
     category: 'SCIENCE',
     signalType: 'BREAKTHROUGH',
-    geography: { country: 'World', region: 'Global', latitude: 0, longitude: 0 },
+    // "Global" signals have no single real location, so they are anchored
+    // at distinct open-ocean points (no landmass) rather than (0,0), which
+    // sits in the Gulf of Guinea and would visually clump every global
+    // signal on top of West Africa. Each anchor is spaced apart so the
+    // globe doesn't stack them either.
+    geography: { country: 'World', region: 'Global', latitude: -60, longitude: -140 },
     timestamp: '2026-01-14T00:00:00.000Z',
     importance: 4,
     status: 'active',
@@ -132,7 +137,9 @@ const REAL_SIGNALS = [
       'WHO reports that 84% of children globally received a first dose of measles vaccine in 2025, below the 2019 level of 86%. WHO estimates about 95,000 measles deaths occurred globally in 2024 and that vaccination averted nearly 59 million deaths between 2000 and 2024.',
     category: 'HEALTH',
     signalType: 'NEEDS_ATTENTION',
-    geography: { country: 'World', region: 'Global', latitude: 0, longitude: 0 },
+    // See Signal 1's comment: anchored off any landmass, spaced apart from
+    // the other "Global" signals so they don't clump on the globe.
+    geography: { country: 'World', region: 'Global', latitude: 20, longitude: 40 },
     timestamp: '2026-07-15T00:00:00.000Z',
     importance: 5,
     status: 'active',
@@ -171,7 +178,9 @@ const REAL_SIGNALS = [
       'NASA’s Galaxy Zoo: Clump Scout II, launched in 2026, asks participants to review galaxy images with machine-identified star-forming clumps and provide feedback. The project is online.',
     category: 'SCIENCE',
     signalType: 'PROGRESS',
-    geography: { country: 'World', region: 'Global', latitude: 0, longitude: 0 },
+    // See Signal 1's comment: anchored off any landmass, spaced apart from
+    // the other "Global" signals so they don't clump on the globe.
+    geography: { country: 'World', region: 'Global', latitude: 50, longitude: -160 },
     timestamp: '2026-01-01T00:00:00.000Z',
     importance: 3,
     status: 'active',
