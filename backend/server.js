@@ -40,6 +40,22 @@ const pendingStore = require('./pending-signals');
 const controlledIngestion = require('./controlled-ingestion');
 
 const PORT = process.env.PORT || 3000;
+const LOCAL_FRONTEND_ORIGINS = new Set([
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+]);
+const configuredOrigin = process.env.FRONTEND_ORIGIN?.trim();
+const allowedFrontendOrigins = configuredOrigin
+  ? new Set([configuredOrigin])
+  : LOCAL_FRONTEND_ORIGINS;
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Same-origin/server-to-server requests do not send Origin.
+    if (!origin || allowedFrontendOrigins.has(origin)) return callback(null, true);
+    return callback(new Error('Origin is not allowed by CORS'));
+  },
+};
 
 /**
  * Truthful data-mode label derived from the ACTIVE dataset: "VERIFIED"
@@ -114,7 +130,7 @@ if (!validation.ok) {
 /* ----------------------------------------------- app setup */
 
 const app = express();
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '32kb' }));
 
 app.use((req, _res, next) => {

@@ -6,7 +6,8 @@
     "dev": "concurrently \"vite\" \"nodemon backend/server.js\"",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node backend/server.js"
+    "start": "node backend/server.js",
+    "test:backend": "node --test backend/tests"
   },
   "dependencies": {
     "react": "^18.0.0",

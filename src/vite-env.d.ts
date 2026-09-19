@@ -1,7 +1,9 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  /** Optional override for the API base path; defaults to "/api". */
+  /** Production API origin/path override; defaults to same-origin "/api". */
+  readonly VITE_API_BASE_URL?: string;
+  /** Legacy alias retained for existing local setups. */
   readonly VITE_API_BASE?: string;
 }
 

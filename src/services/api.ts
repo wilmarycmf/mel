@@ -6,7 +6,7 @@
  *   GET /api/signals → { dataMode, total, signals[] }
  *   GET /api/health  → { status }
  *
- * The base URL is read from `VITE_API_BASE`. It may be a *server root*
+ * The base URL is read from `VITE_API_BASE_URL` (with legacy `VITE_API_BASE` support). It may be a *server root*
  * (e.g. `http://localhost:3000`) or already include the `/api` prefix
  * (e.g. `/api`). We normalise it so that `/api/world`, `/api/signals`,
  * `/api/health` are always requested — never `http://localhost:3000/world`.
@@ -28,7 +28,10 @@ import {
   type WorldPayload,
 } from '../types';
 
-const RAW_BASE_URL = (import.meta.env?.VITE_API_BASE as string | undefined) ?? '/api';
+const RAW_BASE_URL =
+  (import.meta.env?.VITE_API_BASE_URL as string | undefined) ??
+  (import.meta.env?.VITE_API_BASE as string | undefined) ??
+  '/api';
 const BASE_URL = resolveBaseUrl(RAW_BASE_URL);
 const TIMEOUT_MS = 12_000;
 
